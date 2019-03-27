@@ -13,7 +13,8 @@ namespace BeyondCloudPingConsole
             // setup config file
             var configBuilder = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json", optional: true);
+                .AddJsonFile("appsettings.json", optional: true)
+                .AddCommandLine(args);
             var config = configBuilder.Build();
 
             // setup our DI
@@ -28,7 +29,7 @@ namespace BeyondCloudPingConsole
             var logger = serviceProvider.GetService<ILoggerFactory>()
                 .CreateLogger<Program>();
             logger.LogInformation("Starting application");
-
+            
             // do the actual work here
             var service = serviceProvider.GetService<IPingService>();
             service.Ping();
