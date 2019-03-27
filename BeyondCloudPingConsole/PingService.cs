@@ -1,7 +1,9 @@
 ﻿using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Steeltoe.Common.Net;
 using System;
 using System.IO;
+using System.Net;
 
 namespace BeyondCloudPingConsole
 {
@@ -21,22 +23,29 @@ namespace BeyondCloudPingConsole
             try
             {
                 _logger.LogInformation("Ping");
-                var path = $"{Path.DirectorySeparatorChar}{Path.DirectorySeparatorChar}{_options.ServerName}{Path.DirectorySeparatorChar}{_options.ServerFolder}";
-                _logger.LogInformation($"Path: {path}");
-                var di = new DirectoryInfo(path);
 
-                if (di.Exists)
+                if (string.IsNullOrEmpty(_options.Username) || string.IsNullOrEmpty(_options.Password))
+                    throw new ArgumentException("username or password empty");
+
+                var credentials = new NetworkCredential(_options.Username, _options.Password);
+                var path = $"{Path.DirectorySeparatorChar}{Path.DirectorySeparatorChar}{_options.ServerName}{Path.DirectorySeparatorChar}{_options.ServerFolder}";
+                using (WindowsNetworkFileShare networkPath = new WindowsNetworkFileShare(path, credentials))
                 {
-                    var result = di.GetDirectories();
-                    _logger.LogInformation($"{_options.ServerFolder} directories: {result.Length}");
+                    _logger.LogInformation($"Path: {path}");
+                    var di = new DirectoryInfo(path);
+                    if (di.Exists)
+                    {
+                        var result = di.GetDirectories();
+                        _logger.LogInformation($"{_options.ServerFolder} directories: {result.Length}");
+                    }
+                    else
+                        _logger.LogError("Path doesnt exist");
                 }
-                else
-                    _logger.LogError("Path doesnt exist");
             }
             catch (Exception ex)
             {
                 _logger.LogCritical($"An error occurred in service: {ex.Message}");
-                throw;
+                //throw;
             }
         }
     }
